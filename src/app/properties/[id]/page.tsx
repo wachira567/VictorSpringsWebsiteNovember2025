@@ -75,7 +75,8 @@ async function getSimilarProperties(propertyId: string, propertyType: string) {
 export async function generateMetadata({
   params,
 }: PropertyPageProps): Promise<Metadata> {
-  const { id } = params;
+  const paramsData = await params;
+  const { id } = paramsData;
   const property = await getProperty(id);
 
   if (!property) {
@@ -96,7 +97,8 @@ export async function generateMetadata({
 }
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
-  const { id } = params;
+  const paramsData = await params;
+  const { id } = paramsData;
   const property = await getProperty(id);
 
   if (!property) {
