@@ -24,9 +24,9 @@ import {
 } from "lucide-react";
 
 interface PropertyPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 async function getProperty(id: string) {
@@ -75,7 +75,7 @@ async function getSimilarProperties(propertyId: string, propertyType: string) {
 export async function generateMetadata({
   params,
 }: PropertyPageProps): Promise<Metadata> {
-  const { id } = await params;
+  const { id } = params;
   const property = await getProperty(id);
 
   if (!property) {
@@ -96,7 +96,7 @@ export async function generateMetadata({
 }
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
-  const { id } = await params;
+  const { id } = params;
   const property = await getProperty(id);
 
   if (!property) {
@@ -422,7 +422,6 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                       images: [
                         "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687078/pexels-fotoaibe-1571459_rsso5r.jpg",
                       ],
-                      featured: false,
                       featured: false,
                     } as any
                   }
