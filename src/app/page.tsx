@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,8 @@ import { Search, MapPin, Home, Star, ArrowRight } from "lucide-react";
 import { signIn } from "next-auth/react";
 
 export default function HomePage() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
