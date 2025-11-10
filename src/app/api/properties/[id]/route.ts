@@ -4,12 +4,13 @@ import Property from "@/models/Property";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
 
-    const { id } = await params;
+    const params = await context.params;
+    const { id } = params;
 
     // Try to find property in database first
     let property = null;
@@ -194,12 +195,13 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
 
-    const { id } = await params;
+    const params = await context.params;
+    const { id } = params;
     const body = await request.json();
     const {
       title,
@@ -255,12 +257,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
 
-    const { id } = await params;
+    const params = await context.params;
+    const { id } = params;
     const deletedProperty = await Property.findByIdAndDelete(id);
 
     if (!deletedProperty) {
