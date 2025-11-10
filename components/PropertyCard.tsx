@@ -16,6 +16,7 @@ interface PropertyCardProps {
     location: {
       address: string;
       city: string;
+      county: string;
     };
     propertyType: string;
     bedrooms: number;
@@ -23,6 +24,8 @@ interface PropertyCardProps {
     area: number;
     images: string[];
     featured: boolean;
+    available?: boolean;
+    amenities?: string[];
   };
 }
 
@@ -69,6 +72,13 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             {property.featured && (
               <div className="absolute top-3 left-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
                 Featured
+              </div>
+            )}
+
+            {/* Available Badge */}
+            {property.available !== undefined && !property.available && (
+              <div className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                Occupied
               </div>
             )}
 

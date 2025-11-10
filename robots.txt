@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Block access to admin areas
+Disallow: /admin/
+Disallow: /api/admin/
+
+# Block access to auth pages
+Disallow: /auth/
+Disallow: /login
+
+# Allow access to API for search engines (but not admin)
+Allow: /api/properties
+
+# Sitemap
+Sitemap: https://victorsprings.co.ke/sitemap.xml

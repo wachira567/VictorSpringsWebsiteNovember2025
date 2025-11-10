@@ -21,7 +21,7 @@ const AdminSchema: Schema = new Schema(
 );
 
 // Add indexes
-AdminSchema.index({ email: 1 });
+AdminSchema.index({ email: 1 }, { unique: true });
 AdminSchema.index({ isSuperAdmin: 1 });
 
 export default mongoose.models.Admin ||

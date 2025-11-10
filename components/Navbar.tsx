@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -34,18 +35,31 @@ import {
 
 export function Navbar() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [savedCount] = useState(3); // Mock data
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      const currentScrollY = window.scrollY;
+      setIsScrolled(currentScrollY > 20);
+
+      // Hide/show navbar on scroll
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -85,8 +99,8 @@ export function Navbar() {
             : "bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm"
         }`}
         initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
+        animate={{ y: isVisible ? 0 : -100 }}
+        transition={{ duration: 0.3 }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -103,15 +117,22 @@ export function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 font-medium"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`font-medium transition-colors duration-200 ${
+                      isActive
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Search Bar */}
@@ -119,9 +140,16 @@ export function Navbar() {
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
+                  ref={searchRef}
                   type="text"
                   placeholder="Search properties, locations..."
                   className="pl-10 pr-4 py-2 w-full rounded-full border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      // TODO: Implement search functionality
+                      console.log("Search:", searchRef.current?.value);
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -248,7 +276,12 @@ export function Navbar() {
                 className="md:hidden"
                 onClick={() => setIsMobileMenuOpen(true)}
               >
-                <Menu className="h-6 w-6" />
+                <motion.div
+                  animate={{ rotate: isMobileMenuOpen ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Menu className="h-6 w-6" />
+                </motion.div>
               </Button>
             </div>
           </div>
@@ -283,7 +316,12 @@ export function Navbar() {
                   size="sm"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <X className="h-6 w-6" />
+                  <motion.div
+                    animate={{ rotate: isMobileMenuOpen ? 0 : 180 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <X className="h-6 w-6" />
+                  </motion.div>
                 </Button>
               </div>
 
@@ -302,23 +340,30 @@ export function Navbar() {
               {/* Mobile Navigation */}
               <div className="flex-1 py-6">
                 <nav className="space-y-2 px-6">
-                  {navItems.map((item, index) => (
-                    <motion.div
-                      key={item.href}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Link
-                        href={item.href}
-                        className="flex items-center space-x-3 py-3 px-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
+                  {navItems.map((item, index) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <motion.div
+                        key={item.href}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
                       >
-                        <item.icon className="h-5 w-5 text-blue-600" />
-                        <span className="font-medium">{item.label}</span>
-                      </Link>
-                    </motion.div>
-                  ))}
+                        <Link
+                          href={item.href}
+                          className={`flex items-center space-x-3 py-3 px-4 rounded-lg transition-colors ${
+                            isActive
+                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                              : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                          }`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <item.icon className="h-5 w-5 text-blue-600" />
+                          <span className="font-medium">{item.label}</span>
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
                 </nav>
 
                 {/* Mobile User Actions */}

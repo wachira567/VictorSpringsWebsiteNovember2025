@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
+import { connectToDatabase } from "@/lib/mongodb";
 import Inquiry from "@/models/Inquiry";
 import Property from "@/models/Property";
 
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const body = await request.json();
 
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const body = await request.json();
     const { id, ...updateData } = body;

@@ -1,9 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Home, Star, ArrowRight } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export default function HomePage() {
   return (
@@ -44,7 +47,10 @@ export default function HomePage() {
                   className="bg-transparent text-white placeholder-gray-300 outline-none flex-1"
                 />
               </div>
-              <Button className="bg-blue-600 hover:bg-blue-700 rounded-full px-8">
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 rounded-full px-8"
+                onClick={() => router.push("/properties")}
+              >
                 Search
               </Button>
             </div>
@@ -282,15 +288,14 @@ export default function HomePage() {
                 Browse Properties
               </Button>
             </Link>
-            <Link href="/admin/properties">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-blue-600"
-              >
-                List Your Property
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-blue-600"
+              onClick={() => signIn()}
+            >
+              List Your Property
+            </Button>
           </div>
         </div>
       </section>

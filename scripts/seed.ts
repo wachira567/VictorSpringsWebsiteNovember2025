@@ -1,4 +1,4 @@
-import connectToDatabase from "../lib/mongodb";
+import { connectToDatabase } from "../lib/mongodb";
 import Property from "../models/Property";
 import User from "../models/User";
 import Admin from "../models/Admin";
@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 
 async function seedDatabase() {
   try {
-    await connectToDatabase();
+    const { db } = await connectToDatabase();
     console.log("Connected to database");
 
     // Clear existing data

@@ -1,212 +1,107 @@
-# Kenya Property Rentals - Comprehensive TODO List
+# Victor Springs Website Fixes - Priority Order
 
-## ✅ COMPLETED TASKS
+## Problem 5: MongoDB Connection (HIGH PRIORITY)
 
-### 1. Project Setup and Dependencies
+- [x] Update lib/mongodb.ts to singleton pattern with MongoClient for serverless
+- [ ] Guide user to set MONGODB_URI, NEXTAUTH_URL, NEXTAUTH_SECRET in Netlify env vars
+- [ ] Ensure MongoDB Atlas allows connections from 0.0.0.0/0
+- [x] Test API routes connect to DB instead of using mocks
+- [x] Update models if needed for new fields (inquiry, etc.)
 
-- [x] Update package.json with required dependencies (MongoDB, NextAuth, etc.)
-- [x] Install dependencies using npm install
-- [x] Set up environment variables file (.env.local)
-- [x] Configure Tailwind CSS with custom animations and glassmorphism
-- [x] Set up shadcn/ui components (button, input, card, etc.)
-- [x] Configure Next.js for PWA (service worker, manifest)
+## Problem 1: Navigation Bar
 
-### 2. Database and Models
+- [x] Add scroll hide/show functionality (hide on scroll down, show on scroll up)
+- [x] Implement active link highlighting using usePathname
+- [x] Ensure mobile hamburger menu is visible and animates (3 lines → X)
+- [x] Add glassmorphism effect (backdrop-blur-lg already present)
+- [ ] Implement search functionality (basic client-side or API)
+- [x] Add "List Property" CTA button (conditional on auth)
+- [x] Add user icon in navbar
+- [ ] Test mobile responsiveness and animations
 
-- [x] Set up MongoDB connection in lib/mongodb.ts
-- [x] Create Mongoose models:
-  - [x] models/Property.ts
-  - [x] models/User.ts
-  - [x] models/Inquiry.ts
-  - [x] models/Admin.ts
-- [x] Implement database seeding script for initial data
-- [x] Set up database indexes for performance
+## Problem 3: Properties Listing Page
 
-### 3. Authentication System
+- [x] Replace client-side mocks with real API fetch (/api/properties)
+- [x] Implement server-side filters in /api/properties/route.ts (price, location, type, beds, etc.)
+- [ ] Add SWR/React Query for caching and loading states
+- [x] Add skeleton loading cards
+- [x] Implement infinite scroll or pagination
+- [x] Format prices in KSh
+- [x] Ensure responsive grid (1 col mobile, 2 tablet, 3-4 desktop)
+- [x] Add "No results found" message
+- [x] Integrate real FilterPanel with advanced filters
+- [x] Update PropertyCard for KSh formatting and save functionality
 
-- [x] Configure NextAuth.js with providers (email, phone OTP)
-- [x] Implement custom pages: login, verify
-- [x] Set up middleware for protected routes
-- [x] Implement phone/email verification with OTP (use Africa's Talking or Twilio)
-- [x] Add social auth prompts for save/inquire actions
-- [x] Implement remember device functionality
+## Problem 2: Login/Authentication Page
 
-### 4. Core UI Components
+- [x] Add glassmorphism effect to login card
+- [x] Implement proper form validation with error messages
+- [x] Add loading states and toast notifications
+- [x] Add "Forgot Password?" link
+- [x] Add "Don't have an account? Sign Up" link
+- [x] Implement social login buttons (Google)
+- [x] Add "Remember me" checkbox
+- [x] Ensure mobile responsive design
+- [ ] Update NextAuth config for Netlify deployment
 
-- [x] Create base UI components with shadcn/ui:
-  - [x] Button, Input, Card, Modal, Toast, etc.
-- [x] Implement custom components:
-  - [x] PropertyCard.tsx (with 3D hover effects)
-  - [x] FilterPanel.tsx (advanced filters)
-  - [x] MapView.tsx (Google Maps integration)
-  - [x] ImageGallery.tsx (lightbox with zoom)
-  - [x] CustomCursor.tsx
-- [x] Add Framer Motion animations for micro-interactions
-- [x] Implement glassmorphism effects
-- [x] Create skeleton loading components
+## Problem 4: Individual Property Detail Page
 
-### 5. API Routes
+- [x] Implement image gallery with lightbox
+- [x] Add Google Maps embed with property location
+- [x] Create inquiry form with validation
+- [x] Add POST /api/inquiries route
+- [x] Show real similar/related properties
+- [ ] Add breadcrumb navigation
+- [x] Implement share buttons (WhatsApp, Facebook, Twitter, Copy Link)
+- [x] Add "Save Property" functionality
+- [x] Update metadata for SEO
 
-- [x] /api/properties (GET, POST, PUT, DELETE)
-- [x] /api/inquiries (GET, POST, PUT)
-- [x] /api/admin (GET, POST for admin creation)
-- [x] /api/auth/[...nextauth]
-- [x] Implement rate limiting and error handling
-- [x] Add caching with Redis (if available)
+## Problem 6: Image Loading and Cloudinary
 
-## 🔄 IN PROGRESS
+- [x] Update next.config.ts with Cloudinary remotePatterns
+- [x] Implement proper image optimization with Next.js Image
+- [x] Add loading="lazy" and blur placeholders
+- [x] Handle missing images gracefully
+- [ ] Test image loading performance
 
-### 6. Home Page (Hero Section)
+## Problem 7: Mobile Responsiveness
 
-- [x] Design immersive hero with video background or animated gradient
-- [x] Add floating property cards
-- [x] Implement smooth scroll animations
-- [x] Add parallax effects
-- [x] Include search bar with autocomplete
-- [x] Add call-to-action buttons
+- [x] Test all pages on mobile (320px, 375px, 414px)
+- [x] Fix layout breaking and text overflow
+- [x] Ensure buttons are 44px minimum touch targets
+- [x] Implement mobile-first approach
+- [x] Test forms and navigation on mobile
 
-### 7. Properties Listing Page
+## Problem 8: Performance and Loading Speed
 
-- [x] Implement infinite scroll for property listings
-- [x] Add advanced filter system:
-  - [x] Price range slider (KSh formatting)
-  - [x] Location search with map toggle
-  - [x] Property type filters
-  - [x] Amenities multi-select
-  - [x] Bedroom/bathroom selectors
-  - [x] Area size range
-  - [x] Availability status
-- [x] Real-time filtering without page reload
-- [x] Save filter functionality for users
-- [x] Property cards with hover effects and 3D transforms
+- [x] Implement code splitting and dynamic imports
+- [x] Add lazy loading for components below fold
+- [x] Optimize bundle size (remove unused deps)
+- [x] Add caching with SWR/React Query
+- [x] Implement loading states and skeletons
+- [x] Optimize API calls (debouncing, batching)
 
-### 8. Property Detail Page
+## Problem 9: SEO and Meta Tags
 
-- [x] Full-screen image gallery with lightbox
-- [x] 360° virtual tours (iframe support)
-- [x] Video walkthroughs (Cloudinary player)
-- [x] Floor plans viewer
-- [x] Neighborhood info (schools, hospitals, malls)
-- [x] Similar properties recommendations
-- [x] Inquiry form with verification
-- [x] WhatsApp direct link
-- [x] Schedule viewing calendar
+- [x] Add comprehensive meta tags to layout.tsx
+- [x] Implement dynamic metadata for property pages
+- [x] Add structured data (JSON-LD) for properties
+- [x] Create sitemap.xml and robots.txt
+- [x] Add canonical URLs
 
-### 9. Admin Dashboard
+## Problem 10: Error Handling and User Feedback
 
-- [x] Secure admin routes (only super admin can create admins)
-- [x] Dashboard with analytics and charts
-- [x] Property management:
-  - [x] Drag-and-drop image upload to Cloudinary
-  - [x] Google Maps location pinning
-  - [x] Bulk edit/delete
-  - [x] Featured property promotion
-- [x] Inquiry management (filter, sort, respond)
-- [x] Admin user management
-- [x] SEO controls (meta tags, schema markup)
+- [x] Install and implement toast notifications (sonner)
+- [ ] Add comprehensive error handling in API routes
+- [x] Implement loading states across the app
+- [x] Create custom error pages (404, 500)
+- [x] Add graceful degradation for missing data
 
-## 📋 REMAINING TASKS
+## Testing and Deployment
 
-### 10. Map Integration
-
-- [ ] Full-screen map view
-- [ ] Cluster markers for nearby properties
-- [ ] Property previews on marker click
-- [ ] Drag map to update listings
-- [ ] Heatmap overlay
-- [ ] Street view integration
-- [ ] Google Maps autocomplete for admin property creation
-
-### 11. Inquiry System
-
-- [ ] Pre-inquiry OTP verification
-- [ ] Inquiry form with preferred contact method
-- [ ] Auto-response with property details
-- [ ] Inquiry tracking for users
-- [ ] Admin dashboard for managing inquiries
-- [ ] Inquiry analytics
-
-### 12. Performance Optimizations
-
-- [ ] Image optimization with Next.js Image and Cloudinary
-- [ ] Lazy loading for images and components
-- [ ] Code splitting and dynamic imports
-- [ ] Service worker for offline support
-- [ ] Optimize bundle size
-
-### 13. Kenyan Market Specifics
-
-- [ ] KSh currency formatting
-- [ ] County/city specific searches
-- [ ] Swahili language toggle
-- [ ] Local neighborhood names
--
-
-### 14. SEO and Marketing
-
-- [ ] Dynamic meta tags per property
-
-- [ ] Social media share previews
-- [ ] Property sitemap generation
-- [ ] Blog section for rental tips
-
-### 15. Advanced Features
-
-- [ ] Dark mode with system preference detection
-- [ ] Custom cursor interactions
-- [ ] Page transitions
-- [ ] Toast notifications
-- [ ] Search autocomplete
-- [ ] Progressive disclosure of features
-
-### 16. Testing and Deployment
-
-- [ ] Unit tests for components and API routes
-- [ ] Integration tests for key flows
-- [ ] E2E tests with Playwright
-- [ ] Performance testing
-- [ ] Deploy to Vercel/Netlify with environment setup
-- [ ] Set up CI/CD pipeline
-
-### 17. Final Polish
-
-- [ ] Awwwards-inspired design refinements
-- [ ] Accessibility improvements (ARIA labels, keyboard navigation)
-- [ ] Cross-browser testing
-- [ ] Mobile responsiveness perfection
-- [ ] Error boundaries and graceful degradation
-- [ ] Documentation for maintenance
-
-## File Structure to Create
-
-- [x] /app/(auth)/login/page.tsx
-- [x] /app/(auth)/verify/page.tsx
-- [x] /app/properties/page.tsx
-- [x] /app/properties/[id]/page.tsx
-- [x] /app/admin/dashboard/page.tsx
-- [x] /app/admin/properties/page.tsx
-- [x] /app/admin/inquiries/page.tsx
-- [x] /app/api/properties/route.ts
-- [x] /app/api/inquiries/route.ts
-- [x] /app/api/admin/route.ts
-- [x] /app/api/auth/[...nextauth]/route.ts
-- [x] /components/ui/ (shadcn components)
-- [x] /components/PropertyCard.tsx
-- [x] /components/FilterPanel.tsx
-- [x] /components/MapView.tsx
-- [x] /components/ImageGallery.tsx
-- [x] /lib/mongodb.ts
-- [x] /lib/cloudinary.ts
-- [x] /lib/auth.ts
-- [x] /models/Property.ts
-- [x] /models/User.ts
-- [x] /models/Inquiry.ts
-- [x] /models/Admin.ts
-- [ ] /public/manifest.json (for PWA)
-- [ ] /public/icons/ (PWA icons)
-
-## Recent Updates
-
-- ✅ Fixed CSS compilation errors by replacing Tailwind v4 syntax with v3
-- ✅ Resolved @custom-variant, @theme, and @apply unknown at-rule errors
-- ✅ Updated globals.css with standard Tailwind directives and custom animations
+- [ ] Test all fixes locally with npm run dev
+- [ ] Use browser_action to test on deployed site
+- [ ] Verify mobile responsiveness
+- [ ] Check Netlify deployment logs for errors
+- [ ] Performance testing (Lighthouse score > 90)
+- [ ] SEO testing and validation

@@ -5,199 +5,114 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PropertyCard from "@/components/PropertyCard";
 import FilterPanel from "@/components/FilterPanel";
-import { Filter, Grid, List, Map, Search } from "lucide-react";
+import { Filter, Grid, List, Map, Search, Loader2 } from "lucide-react";
 
-// Sample properties data - in real app, fetch from API
-const sampleProperties = [
-  {
-    _id: "1",
-    title: "Modern 2BR Apartment in Westlands",
-    price: 85000,
-    location: { address: "Westlands Road", city: "Nairobi" },
-    propertyType: "apartment",
-    bedrooms: 2,
-    bathrooms: 2,
-    area: 120,
-    images: [
-      "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687078/pexels-fotoaibe-1571459_rsso5r.jpg",
-    ],
-    featured: true,
-  },
-  {
-    _id: "2",
-    title: "Luxury Villa in Karen",
-    price: 250000,
-    location: { address: "Karen Road", city: "Nairobi" },
-    propertyType: "villa",
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 350,
-    images: [
-      "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687079/pexels-fotoaibe-1743227_ml4efp.jpg",
-    ],
-    featured: true,
-  },
-  {
-    _id: "3",
-    title: "Cozy Studio in Kilimani",
-    price: 35000,
-    location: { address: "Kilimani Road", city: "Nairobi" },
-    propertyType: "studio",
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 45,
-    images: [
-      "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687017/pexels-expect-best-79873-323705_jel5c4.jpg",
-    ],
-    featured: false,
-  },
-  {
-    _id: "4",
-    title: "Spacious 3BR House in Kileleshwa",
-    price: 120000,
-    location: { address: "Kileleshwa Road", city: "Nairobi" },
-    propertyType: "house",
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 200,
-    images: [
-      "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687078/pexels-fotoaibe-1571459_rsso5r.jpg",
-    ],
-    featured: false,
-  },
-  {
-    _id: "5",
-    title: "Penthouse with City Views",
-    price: 300000,
-    location: { address: "Parklands Avenue", city: "Nairobi" },
-    propertyType: "penthouse",
-    bedrooms: 3,
-    bathrooms: 3,
-    area: 280,
-    images: [
-      "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687079/pexels-fotoaibe-1743227_ml4efp.jpg",
-    ],
-    featured: true,
-  },
-  {
-    _id: "6",
-    title: "Affordable 1BR in Eastlands",
-    price: 25000,
-    location: { address: "Eastlands Road", city: "Nairobi" },
-    propertyType: "apartment",
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 60,
-    images: [
-      "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687017/pexels-expect-best-79873-323705_jel5c4.jpg",
-    ],
-    featured: false,
-  },
-];
+interface Property {
+  _id: string;
+  title: string;
+  price: number;
+  location: {
+    address: string;
+    city: string;
+    county: string;
+  };
+  propertyType: string;
+  bedrooms: number;
+  bathrooms: number;
+  area: number;
+  images: string[];
+  featured: boolean;
+  available: boolean;
+  amenities?: string[];
+}
+
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
 
 export default function PropertiesPage() {
-  const [properties, setProperties] = useState(sampleProperties);
-  const [filteredProperties, setFilteredProperties] =
-    useState(sampleProperties);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showMap, setShowMap] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<any>({});
 
-  // Filter and search logic
+  // Fetch properties from API
+  const fetchProperties = async (
+    page = 1,
+    search = "",
+    sort = "featured",
+    filterParams = {}
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "12",
+        ...(search && { location: search }),
+        ...(sort === "price-low" && { sort: "price:asc" }),
+        ...(sort === "price-high" && { sort: "price:desc" }),
+        ...(sort === "featured" && { featured: "true" }),
+        ...filterParams,
+      });
+
+      const response = await fetch(`/api/properties?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch properties");
+      }
+
+      const data = await response.json();
+      setProperties(data.properties || []);
+      setFilteredProperties(data.properties || []);
+      setPagination(data.pagination);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Error fetching properties:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
   useEffect(() => {
-    let filtered = [...properties];
+    fetchProperties(currentPage, searchQuery, sortBy, filters);
+  }, [currentPage, sortBy, filters]);
 
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (property) =>
-          property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          property.location.city
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          property.location.address
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
-      );
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery !== undefined) {
+        setCurrentPage(1);
+        fetchProperties(1, searchQuery, sortBy, filters);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleFiltersChange = (newFilters: any) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const loadMore = () => {
+    if (pagination?.hasNext) {
+      setCurrentPage((prev) => prev + 1);
     }
-
-    // Sorting
-    switch (sortBy) {
-      case "price-low":
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high":
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case "newest":
-        // In real app, sort by createdAt
-        break;
-      case "featured":
-      default:
-        filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-        break;
-    }
-
-    setFilteredProperties(filtered);
-  }, [properties, searchQuery, sortBy]);
-
-  const handleFiltersChange = (filters: any) => {
-    let filtered = [...properties];
-
-    // Apply filters
-    if (filters.location) {
-      filtered = filtered.filter(
-        (property) =>
-          property.location.city
-            .toLowerCase()
-            .includes(filters.location.toLowerCase()) ||
-          property.location.address
-            .toLowerCase()
-            .includes(filters.location.toLowerCase())
-      );
-    }
-
-    if (filters.propertyType) {
-      filtered = filtered.filter(
-        (property) => property.propertyType === filters.propertyType
-      );
-    }
-
-    if (filters.priceRange) {
-      filtered = filtered.filter(
-        (property) =>
-          property.price >= filters.priceRange[0] &&
-          property.price <= filters.priceRange[1]
-      );
-    }
-
-    if (filters.bedrooms) {
-      filtered = filtered.filter(
-        (property) => property.bedrooms >= parseInt(filters.bedrooms)
-      );
-    }
-
-    if (filters.bathrooms) {
-      filtered = filtered.filter(
-        (property) => property.bathrooms >= parseInt(filters.bathrooms)
-      );
-    }
-
-    if (filters.areaRange) {
-      filtered = filtered.filter(
-        (property) =>
-          property.area >= filters.areaRange[0] &&
-          property.area <= filters.areaRange[1]
-      );
-    }
-
-    if (filters.available !== undefined) {
-      // In real app, check availability status
-    }
-
-    setFilteredProperties(filtered);
   };
 
   return (
@@ -284,13 +199,32 @@ export default function PropertiesPage() {
               Properties for Rent
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              {filteredProperties.length} properties found
+              {!loading && !error && pagination
+                ? `${pagination.total} properties found`
+                : "Loading..."}
             </p>
           </div>
         </div>
 
         {/* Properties Grid/List */}
-        {showMap ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <span className="ml-2 text-gray-600 dark:text-gray-400">
+              Loading properties...
+            </span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="text-red-400 mb-4">
+              <Search className="h-12 w-12 mx-auto" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Error loading properties
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">{error}</p>
+          </div>
+        ) : showMap ? (
           <div className="bg-gray-200 dark:bg-gray-700 rounded-lg h-96 flex items-center justify-center">
             <div className="text-center">
               <Map className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -314,16 +248,16 @@ export default function PropertiesPage() {
         )}
 
         {/* Load More */}
-        {filteredProperties.length > 0 && (
+        {!loading && !error && pagination?.hasNext && (
           <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" onClick={loadMore}>
               Load More Properties
             </Button>
           </div>
         )}
 
         {/* No Results */}
-        {filteredProperties.length === 0 && (
+        {!loading && !error && filteredProperties.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search className="h-12 w-12 mx-auto" />

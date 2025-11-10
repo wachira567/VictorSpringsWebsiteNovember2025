@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
+import { connectToDatabase } from "@/lib/mongodb";
 import Property from "@/models/Property";
 
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -101,175 +101,8 @@ export async function GET(request: NextRequest) {
     const total = await Property.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
-    // If no properties in database, return mock data
-    if (properties.length === 0) {
-      const mockProperties = [
-        {
-          _id: "1",
-          title: "Modern 2BR Apartment in Westlands",
-          price: 85000,
-          location: {
-            address: "Westlands Road",
-            city: "Nairobi",
-            county: "Nairobi",
-          },
-          propertyType: "apartment",
-          bedrooms: 2,
-          bathrooms: 2,
-          area: 120,
-          images: [
-            "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687078/pexels-fotoaibe-1571459_rsso5r.jpg",
-          ],
-          featured: true,
-          available: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          _id: "2",
-          title: "Luxury Villa in Karen",
-          price: 250000,
-          location: {
-            address: "Karen Road",
-            city: "Nairobi",
-            county: "Nairobi",
-          },
-          propertyType: "villa",
-          bedrooms: 4,
-          bathrooms: 3,
-          area: 350,
-          images: [
-            "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687079/pexels-fotoaibe-1743227_ml4efp.jpg",
-          ],
-          featured: true,
-          available: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          _id: "3",
-          title: "Cozy Studio in Kilimani",
-          price: 35000,
-          location: {
-            address: "Kilimani Road",
-            city: "Nairobi",
-            county: "Nairobi",
-          },
-          propertyType: "studio",
-          bedrooms: 1,
-          bathrooms: 1,
-          area: 45,
-          images: [
-            "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687017/pexels-expect-best-79873-323705_jel5c4.jpg",
-          ],
-          featured: false,
-          available: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          _id: "4",
-          title: "Spacious 3BR House in Kileleshwa",
-          price: 120000,
-          location: {
-            address: "Kileleshwa Road",
-            city: "Nairobi",
-            county: "Nairobi",
-          },
-          propertyType: "house",
-          bedrooms: 3,
-          bathrooms: 2,
-          area: 200,
-          images: [
-            "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687078/pexels-fotoaibe-1571459_rsso5r.jpg",
-          ],
-          featured: false,
-          available: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          _id: "5",
-          title: "Penthouse with City Views",
-          price: 300000,
-          location: {
-            address: "Parklands Avenue",
-            city: "Nairobi",
-            county: "Nairobi",
-          },
-          propertyType: "penthouse",
-          bedrooms: 3,
-          bathrooms: 3,
-          area: 280,
-          images: [
-            "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687079/pexels-fotoaibe-1743227_ml4efp.jpg",
-          ],
-          featured: true,
-          available: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          _id: "6",
-          title: "Affordable 1BR in Eastlands",
-          price: 25000,
-          location: {
-            address: "Eastlands Road",
-            city: "Nairobi",
-            county: "Nairobi",
-          },
-          propertyType: "apartment",
-          bedrooms: 1,
-          bathrooms: 1,
-          area: 60,
-          images: [
-            "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687017/pexels-expect-best-79873-323705_jel5c4.jpg",
-          ],
-          featured: false,
-          available: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-
-      // Apply filters to mock data
-      let filteredMock = [...mockProperties];
-
-      if (location) {
-        filteredMock = filteredMock.filter(
-          (p) =>
-            p.location.city.toLowerCase().includes(location.toLowerCase()) ||
-            p.location.address.toLowerCase().includes(location.toLowerCase())
-        );
-      }
-
-      if (propertyType) {
-        filteredMock = filteredMock.filter(
-          (p) => p.propertyType === propertyType
-        );
-      }
-
-      if (exclude) {
-        filteredMock = filteredMock.filter((p) => p._id !== exclude);
-      }
-
-      // Apply limit
-      const startIndex = skip;
-      const endIndex = startIndex + limit;
-      const paginatedMock = filteredMock.slice(startIndex, endIndex);
-
-      return NextResponse.json({
-        properties: paginatedMock,
-        pagination: {
-          page,
-          limit,
-          total: filteredMock.length,
-          totalPages: Math.ceil(filteredMock.length / limit),
-          hasNext: endIndex < filteredMock.length,
-          hasPrev: page > 1,
-        },
-      });
-    }
+    // If no properties in database, return empty array instead of mock data
+    // This ensures we test real DB connection
 
     return NextResponse.json({
       properties,
@@ -293,7 +126,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const body = await request.json();
 

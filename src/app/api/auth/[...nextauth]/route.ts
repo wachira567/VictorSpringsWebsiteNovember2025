@@ -1,11 +1,17 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import connectToDatabase from "@/lib/mongodb";
+import GoogleProvider from "next-auth/providers/google";
+import { connectToDatabase } from "@/lib/mongodb";
 import Admin from "@/models/Admin";
+import User from "@/models/User";
 import bcrypt from "bcryptjs";
 
 const handler = NextAuth({
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -18,7 +24,7 @@ const handler = NextAuth({
         }
 
         try {
-          await connectToDatabase();
+          const { db } = await connectToDatabase();
 
           const admin = await Admin.findOne({ email: credentials.email });
 
@@ -52,10 +58,38 @@ const handler = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        try {
+          const { db } = await connectToDatabase();
+
+          // Check if user exists
+          let existingUser = await User.findOne({ email: user.email });
+
+          if (!existingUser) {
+            // Create new user
+            existingUser = await User.create({
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              provider: "google",
+              emailVerified: new Date(),
+            });
+          }
+
+          user.id = existingUser._id.toString();
+          user.role = "user";
+        } catch (error) {
+          console.error("Google sign-in error:", error);
+          return false;
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
-        token.isSuperAdmin = user.isSuperAdmin;
+        token.role = user.role || "user";
+        token.isSuperAdmin = user.isSuperAdmin || false;
       }
       return token;
     },
@@ -69,8 +103,8 @@ const handler = NextAuth({
     },
   },
   pages: {
-    signIn: "/admin/login",
-    error: "/admin/login",
+    signIn: "/login",
+    error: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
 });

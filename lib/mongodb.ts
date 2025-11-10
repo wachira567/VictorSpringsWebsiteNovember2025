@@ -1,49 +1,55 @@
-import mongoose from "mongoose";
+import { MongoClient } from "mongodb";
 
-const MONGODB_URI =
-  process.env.MONGODB_URI ||
-  "mongodb+srv://washira:washira@cluster0.ik0ijjp.mongodb.net/?appName=Cluster0";
-
-if (!MONGODB_URI) {
+if (!process.env.MONGODB_URI) {
   throw new Error(
-    "Please define the MONGODB_URI environment variable inside .env.local"
+    "Please add MONGODB_URI to .env.local or Netlify environment variables"
   );
 }
 
-/**
- * Global is used here to maintain a cached connection across hot reloads
- * in development. This prevents connections growing exponentially
- * during API Route usage.
- */
-let cached = (global as any).mongoose;
+const uri = process.env.MONGODB_URI;
+const options = {
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+};
 
-if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
+
+if (process.env.NODE_ENV === "development") {
+  // Development: use global variable to preserve connection
+  let globalWithMongo = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient>;
+  };
+
+  if (!globalWithMongo._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    globalWithMongo._mongoClientPromise = client.connect();
+  }
+  clientPromise = globalWithMongo._mongoClientPromise;
+} else {
+  // Production: create new client for each function invocation
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
 }
 
-async function connectToDatabase() {
-  if (cached.conn) {
-    return cached.conn;
+// Singleton pattern for serverless environments
+let cachedClient: MongoClient | null = null;
+let cachedDb: any = null;
+
+export async function connectToDatabase() {
+  if (cachedClient && cachedDb) {
+    return { client: cachedClient, db: cachedDb };
   }
 
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+  if (!clientPromise) {
+    client = new MongoClient(uri, options);
+    clientPromise = client.connect();
   }
 
-  try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    throw e;
-  }
+  cachedClient = await clientPromise;
+  cachedDb = cachedClient.db();
 
-  return cached.conn;
+  return { client: cachedClient, db: cachedDb };
 }
 
-export default connectToDatabase;
+export default clientPromise;
