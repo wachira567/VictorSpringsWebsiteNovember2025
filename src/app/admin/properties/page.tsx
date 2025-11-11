@@ -1,8 +1,8 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,8 +24,19 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  Upload,
+  MapPin,
+  X,
+  Image as ImageIcon,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 interface Property {
   _id: string;
@@ -47,7 +58,7 @@ interface Property {
 }
 
 export default function AdminPropertiesPage() {
-  const { data: session, status } = useSession();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -74,16 +85,110 @@ export default function AdminPropertiesPage() {
     available: true,
   });
 
-  useEffect(() => {
-    if (status === "loading") return;
+  // Image upload state
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    if (!session || (session.user as any)?.role !== "admin") {
-      router.push("/admin/login");
+  // Google Maps state
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number;
+    lng: number;
+    placeId: string;
+  } | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const autocompleteRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!user) {
+      router.push("/login");
       return;
     }
 
     fetchProperties();
-  }, [session, status, router]);
+    initializeGoogleMaps();
+  }, [user, isLoaded, router]);
+
+  const initializeGoogleMaps = async () => {
+    if (typeof window !== "undefined" && (window as any).google) {
+      setMapLoaded(true);
+      initializeMap();
+      return;
+    }
+
+    try {
+      const { Loader } = await import("@googlemaps/js-api-loader");
+      const loader = new Loader({
+        apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+        version: "weekly",
+        libraries: ["places"],
+      });
+
+      await loader.load();
+      setMapLoaded(true);
+      initializeMap();
+    } catch (error) {
+      console.error("Error loading Google Maps:", error);
+    }
+  };
+
+  const initializeMap = () => {
+    if (!mapRef.current || !autocompleteRef.current || !(window as any).google)
+      return;
+
+    const map = new (window as any).google.maps.Map(mapRef.current, {
+      center: { lat: -1.2864, lng: 36.8172 }, // Nairobi
+      zoom: 12,
+    });
+
+    const autocomplete = new (window as any).google.maps.places.Autocomplete(
+      autocompleteRef.current
+    );
+    autocomplete.bindTo("bounds", map);
+
+    const marker = new (window as any).google.maps.Marker({
+      map,
+      anchorPoint: new (window as any).google.maps.Point(0, -29),
+    });
+
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (!place.geometry || !place.geometry.location) return;
+
+      if (place.geometry.viewport) {
+        map.fitBounds(place.geometry.viewport);
+      } else {
+        map.setCenter(place.geometry.location);
+        map.setZoom(17);
+      }
+
+      marker.setPosition(place.geometry.location);
+      marker.setVisible(true);
+
+      setSelectedLocation({
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+        placeId: place.place_id || `custom-${Date.now()}`,
+      });
+    });
+
+    map.addListener("click", (event: any) => {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+
+      marker.setPosition({ lat, lng });
+      marker.setVisible(true);
+
+      setSelectedLocation({
+        lat,
+        lng,
+        placeId: `custom-${Date.now()}`,
+      });
+    });
+  };
 
   const fetchProperties = async () => {
     try {
@@ -104,8 +209,70 @@ export default function AdminPropertiesPage() {
     }
   };
 
+  const handleImageUpload = async (files: FileList) => {
+    setUploadingImages(true);
+    const newImages: string[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          newImages.push(data.url);
+        } else {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+      }
+
+      setUploadedImages((prev) => [...prev, ...newImages]);
+      toast({
+        title: "Success",
+        description: `${newImages.length} image(s) uploaded successfully`,
+      });
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload images",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleCreateProperty = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (uploadedImages.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please upload at least one image",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedLocation) {
+      toast({
+        title: "Error",
+        description: "Please select a location on the map",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const propertyData = {
@@ -118,11 +285,12 @@ export default function AdminPropertiesPage() {
           address: formData.address,
           city: formData.city,
           county: formData.county,
+          googlePin: selectedLocation,
         },
-        images: [
-          "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687078/pexels-fotoaibe-1571459_rsso5r.jpg",
-        ],
+        images: uploadedImages,
       };
+
+      console.log("Sending property data:", propertyData);
 
       const response = await fetch("/api/properties", {
         method: "POST",
@@ -131,6 +299,10 @@ export default function AdminPropertiesPage() {
         },
         body: JSON.stringify(propertyData),
       });
+
+      console.log("Response status:", response.status);
+      const responseData = await response.json();
+      console.log("Response data:", responseData);
 
       if (response.ok) {
         toast({
@@ -141,13 +313,14 @@ export default function AdminPropertiesPage() {
         resetForm();
         fetchProperties();
       } else {
-        throw new Error("Failed to create property");
+        throw new Error(responseData.error || "Failed to create property");
       }
     } catch (error) {
       console.error("Error creating property:", error);
       toast({
         title: "Error",
-        description: "Failed to create property",
+        description:
+          error instanceof Error ? error.message : "Failed to create property",
         variant: "destructive",
       });
     }
@@ -196,6 +369,12 @@ export default function AdminPropertiesPage() {
       featured: false,
       available: true,
     });
+    setUploadedImages([]);
+    setSelectedLocation(null);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const filteredProperties = properties.filter((property) => {
@@ -207,7 +386,7 @@ export default function AdminPropertiesPage() {
     return matchesSearch && matchesType;
   });
 
-  if (status === "loading" || loading) {
+  if (!isLoaded || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -215,36 +394,35 @@ export default function AdminPropertiesPage() {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Property Management
-            </h1>
-            <p className="text-gray-600 mt-2">Manage your property listings</p>
-          </div>
+    <div className="admin-page">
+      <div className="admin-container">
+        <div className="admin-header">
+          <h1>Property Management</h1>
+          <p>Manage your property listings with style and precision</p>
+        </div>
+        <div className="flex justify-end mb-6">
           <Dialog
             open={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-green-600 to-blue-600">
-                <Plus className="mr-2 h-4 w-4" />
+              <button className="btn btn-primary btn-lg">
+                <Plus className="mr-3 h-5 w-5" />
                 Add Property
-              </Button>
+              </button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-sm">
               <DialogHeader>
-                <DialogTitle>Add New Property</DialogTitle>
+                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Add New Property
+                </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleCreateProperty} className="space-y-4">
+              <form onSubmit={handleCreateProperty} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="title">Title</Label>
@@ -283,6 +461,71 @@ export default function AdminPropertiesPage() {
                   />
                 </div>
 
+                {/* Image Upload Section */}
+                <div className="space-y-4">
+                  <Label className="text-lg font-semibold">
+                    Property Images
+                  </Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) =>
+                        e.target.files && handleImageUpload(e.target.files)
+                      }
+                      className="hidden"
+                    />
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        {uploadingImages ? (
+                          <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+                        ) : (
+                          <ImageIcon className="h-12 w-12 text-gray-400" />
+                        )}
+                      </div>
+                      <div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingImages}
+                          className="mr-2"
+                        >
+                          <Upload className="mr-2 h-4 w-4" />
+                          Choose Images
+                        </Button>
+                        <span className="text-sm text-gray-500">
+                          or drag and drop
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Image Preview */}
+                  {uploadedImages.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {uploadedImages.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={image}
+                            alt={`Property ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="address">Address</Label>
@@ -317,6 +560,41 @@ export default function AdminPropertiesPage() {
                       required
                     />
                   </div>
+                </div>
+
+                {/* Google Maps Location Selector */}
+                <div className="space-y-4">
+                  <Label className="text-lg font-semibold flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Property Location
+                  </Label>
+                  {mapLoaded ? (
+                    <div className="space-y-4">
+                      <Input
+                        ref={autocompleteRef}
+                        placeholder="Search for a location..."
+                        className="w-full"
+                      />
+                      <div
+                        ref={mapRef}
+                        className="w-full h-64 bg-gray-100 rounded-lg"
+                      />
+                      {selectedLocation && (
+                        <div className="text-sm text-green-600 flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          Location selected: {selectedLocation.lat.toFixed(
+                            4
+                          )}, {selectedLocation.lng.toFixed(4)}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <div className="text-gray-500">
+                        Loading Google Maps...
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-4 gap-4">
@@ -407,15 +685,29 @@ export default function AdminPropertiesPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end space-x-2">
+                <div className="flex justify-end space-x-2 pt-6 border-t">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setIsCreateDialogOpen(false)}
+                    className="hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Create Property</Button>
+                  <Button
+                    type="submit"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    disabled={uploadingImages}
+                  >
+                    {uploadingImages ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Property"
+                    )}
+                  </Button>
                 </div>
               </form>
             </DialogContent>
@@ -423,95 +715,96 @@ export default function AdminPropertiesPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search properties..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+        <div className="filters-container">
+          <div className="filters-grid">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                placeholder="Search properties..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="filter-input pl-12"
+              />
+            </div>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">All Types</option>
+              <option value="apartment">Apartment</option>
+              <option value="house">House</option>
+              <option value="villa">Villa</option>
+              <option value="studio">Studio</option>
+              <option value="penthouse">Penthouse</option>
+            </select>
           </div>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="apartment">Apartment</SelectItem>
-              <SelectItem value="house">House</SelectItem>
-              <SelectItem value="villa">Villa</SelectItem>
-              <SelectItem value="studio">Studio</SelectItem>
-              <SelectItem value="penthouse">Penthouse</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Properties Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="properties-grid">
           {filteredProperties.map((property) => (
-            <Card key={property._id} className="overflow-hidden">
-              <div className="aspect-video bg-gray-200 relative">
+            <div key={property._id} className="property-card">
+              <div className="property-image">
                 {property.images[0] && (
                   <img
                     src={property.images[0]}
                     alt={property.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                   />
                 )}
-                <div className="absolute top-2 right-2 flex gap-2">
+                <div className="property-badges">
                   {property.featured && (
-                    <Badge className="bg-yellow-500">Featured</Badge>
+                    <div className="property-badge featured">Featured</div>
                   )}
                   {!property.available && (
-                    <Badge variant="destructive">Unavailable</Badge>
+                    <div className="property-badge unavailable">
+                      Unavailable
+                    </div>
                   )}
                 </div>
               </div>
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-lg mb-2">{property.title}</h3>
-                <p className="text-gray-600 text-sm mb-2">
+              <div className="property-content">
+                <div className="property-title">{property.title}</div>
+                <div className="property-location">
+                  <MapPin className="h-4 w-4" />
                   {property.location.city}, {property.location.county}
-                </p>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-blue-600">
-                    KSh {property.price.toLocaleString()}
-                  </span>
-                  <Badge variant="outline">{property.propertyType}</Badge>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                <div className="property-details">
+                  <div className="property-price">
+                    KSh {property.price.toLocaleString()}
+                  </div>
+                  <div className="property-type">{property.propertyType}</div>
+                </div>
+                <div className="property-specs">
                   <span>{property.bedrooms} bed</span>
                   <span>•</span>
                   <span>{property.bathrooms} bath</span>
                   <span>•</span>
                   <span>{property.area} sqm</span>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                <div className="property-actions">
+                  <button
+                    className="property-action-button primary"
                     onClick={() => router.push(`/properties/${property._id}`)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
                     View
-                  </Button>
-                  <Button variant="outline" size="sm">
+                  </button>
+                  <button className="property-action-button secondary">
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  </button>
+                  <button
+                    className="property-action-button danger"
                     onClick={() => handleDeleteProperty(property._id)}
-                    className="text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete
-                  </Button>
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
 

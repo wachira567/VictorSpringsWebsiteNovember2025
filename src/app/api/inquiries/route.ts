@@ -5,7 +5,7 @@ import Property from "@/models/Property";
 
 export async function GET(request: NextRequest) {
   try {
-    const { db } = await connectToDatabase();
+    await connectToDatabase(); // Remove db destructuring since we're using mongoose
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { db } = await connectToDatabase();
+    await connectToDatabase(); // Remove db destructuring since we're using mongoose
 
     const body = await request.json();
 
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { db } = await connectToDatabase();
+    await connectToDatabase(); // Remove db destructuring since we're using mongoose
 
     const body = await request.json();
     const { id, ...updateData } = body;

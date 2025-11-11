@@ -8,8 +8,14 @@ if (!process.env.MONGODB_URI) {
 
 const uri = process.env.MONGODB_URI;
 const options = {
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 30000, // Increased from 5s to 30s
+  socketTimeoutMS: 60000, // Increased from 45s to 60s
+  connectTimeoutMS: 30000,
+  maxPoolSize: 10,
+  minPoolSize: 5,
+  maxIdleTimeMS: 30000,
+  bufferMaxEntries: 0, // Disable mongoose buffering
+  bufferCommands: false, // Disable mongoose buffering
 };
 
 let client: MongoClient;
@@ -37,19 +43,31 @@ let cachedClient: MongoClient | null = null;
 let cachedDb: any = null;
 
 export async function connectToDatabase() {
+  console.log("Attempting to connect to MongoDB...");
   if (cachedClient && cachedDb) {
+    console.log("Using cached MongoDB connection");
     return { client: cachedClient, db: cachedDb };
   }
 
   if (!clientPromise) {
+    console.log("Creating new MongoDB client...");
     client = new MongoClient(uri, options);
     clientPromise = client.connect();
   }
 
-  cachedClient = await clientPromise;
-  cachedDb = cachedClient.db();
-
-  return { client: cachedClient, db: cachedDb };
+  try {
+    console.log("Waiting for MongoDB connection...");
+    cachedClient = await clientPromise;
+    cachedDb = cachedClient.db();
+    console.log(
+      "Successfully connected to MongoDB database:",
+      cachedDb.databaseName
+    );
+    return { client: cachedClient, db: cachedDb };
+  } catch (error) {
+    console.error("Failed to connect to MongoDB:", error);
+    throw error;
+  }
 }
 
 export default clientPromise;

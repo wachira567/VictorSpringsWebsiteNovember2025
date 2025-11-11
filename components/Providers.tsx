@@ -1,7 +1,17 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <ClerkProvider
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/admin/dashboard"
+      signUpFallbackRedirectUrl="/admin/dashboard"
+    >
+      {children}
+    </ClerkProvider>
+  );
 }

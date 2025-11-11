@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -54,7 +54,7 @@ interface Inquiry {
 }
 
 export default function AdminInquiriesPage() {
-  const { data: session, status } = useSession();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
@@ -66,15 +66,15 @@ export default function AdminInquiriesPage() {
   const [responseMessage, setResponseMessage] = useState("");
 
   useEffect(() => {
-    if (status === "loading") return;
+    if (!isLoaded) return;
 
-    if (!session || (session.user as any)?.role !== "admin") {
-      router.push("/admin/login");
+    if (!user) {
+      router.push("/login");
       return;
     }
 
     fetchInquiries();
-  }, [session, status, router]);
+  }, [user, isLoaded, router]);
 
   const fetchInquiries = async () => {
     try {
@@ -184,7 +184,7 @@ export default function AdminInquiriesPage() {
     }
   };
 
-  if (status === "loading" || loading) {
+  if (!isLoaded || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -192,66 +192,79 @@ export default function AdminInquiriesPage() {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 pt-24 pb-12 px-6">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-12 fade-in">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
               Inquiry Management
             </h1>
-            <p className="text-gray-600 mt-2">
-              Manage customer inquiries and responses
+            <p className="text-xl text-gray-700 font-medium">
+              Manage customer inquiries and responses with style
             </p>
+            <div className="w-24 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mt-4"></div>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 Total Inquiries
               </CardTitle>
+              <div className="text-2xl">📧</div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{inquiries.length}</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {inquiries.length}
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Pending
+              </CardTitle>
+              <div className="text-2xl">⏳</div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
+              <div className="text-3xl font-bold text-yellow-500">
                 {inquiries.filter((i) => i.status === "pending").length}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Contacted</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Contacted
+              </CardTitle>
+              <div className="text-2xl">📞</div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
                 {inquiries.filter((i) => i.status === "contacted").length}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Resolved</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Resolved
+              </CardTitle>
+              <div className="text-2xl">✅</div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-3xl font-bold bg-gradient-to-r from-green-500 to-teal-500 bg-clip-text text-transparent">
                 {inquiries.filter((i) => i.status === "resolved").length}
               </div>
             </CardContent>
@@ -259,33 +272,38 @@ export default function AdminInquiriesPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search inquiries..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Input
+                placeholder="Search inquiries..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+              />
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-48 h-14 border-2 border-gray-200 focus:border-blue-500 rounded-xl">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="contacted">Contacted</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="contacted">Contacted</SelectItem>
-              <SelectItem value="resolved">Resolved</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Inquiries List */}
         <div className="space-y-4">
           {filteredInquiries.map((inquiry) => (
-            <Card key={inquiry._id} className="overflow-hidden">
+            <Card
+              key={inquiry._id}
+              className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg"
+            >
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1">

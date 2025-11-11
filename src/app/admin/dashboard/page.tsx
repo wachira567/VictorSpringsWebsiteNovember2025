@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -15,21 +15,21 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === "loading") return;
+    if (!isLoaded) return;
 
-    if (!session || (session.user as any)?.role !== "admin") {
-      router.push("/admin/login");
+    if (!user) {
+      router.push("/login");
       return;
     }
 
     fetchStats();
-  }, [session, status, router]);
+  }, [user, isLoaded, router]);
 
   const fetchStats = async () => {
     try {
@@ -57,7 +57,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (status === "loading" || loading) {
+  if (!isLoaded || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -65,145 +65,128 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Welcome back, {session.user?.email}
-            {(session.user as any)?.isSuperAdmin && (
-              <Badge variant="secondary" className="ml-2">
-                Super Admin
-              </Badge>
-            )}
+    <div className="admin-page">
+      <div className="admin-container">
+        <div className="admin-header">
+          <h1>Admin Dashboard</h1>
+          <p>
+            Welcome back,{" "}
+            {user.firstName || user.primaryEmailAddress?.emailAddress}
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Properties
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.totalProperties || 0}
+        <div className="admin-stats-grid">
+          <div className="admin-stat-card">
+            <div className="admin-stat-header">
+              <div>
+                <div className="admin-stat-title">Total Properties</div>
+                <div className="admin-stat-value">
+                  {stats?.totalProperties || 0}
+                </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-2xl">🏠</div>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Inquiries
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.totalInquiries || 0}
+          <div className="admin-stat-card">
+            <div className="admin-stat-header">
+              <div>
+                <div className="admin-stat-title">Total Inquiries</div>
+                <div className="admin-stat-value">
+                  {stats?.totalInquiries || 0}
+                </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-2xl">💬</div>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Inquiries
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {stats?.pendingInquiries || 0}
+          <div className="admin-stat-card">
+            <div className="admin-stat-header">
+              <div>
+                <div className="admin-stat-title">Pending Inquiries</div>
+                <div className="admin-stat-value">
+                  {stats?.pendingInquiries || 0}
+                </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-2xl">⏳</div>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Featured Properties
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {stats?.featuredProperties || 0}
+          <div className="admin-stat-card">
+            <div className="admin-stat-header">
+              <div>
+                <div className="admin-stat-title">Featured Properties</div>
+                <div className="admin-stat-value">
+                  {stats?.featuredProperties || 0}
+                </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-2xl">⭐</div>
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Property Management</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                className="w-full"
+        <div className="admin-actions-grid">
+          <div className="admin-action-card">
+            <div className="admin-action-title">Property Management</div>
+            <div className="admin-action-buttons">
+              <button
+                className="admin-button"
                 onClick={() => router.push("/admin/properties")}
               >
                 Manage Properties ({stats?.totalProperties || 0})
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => router.push("/admin/properties/new")}
+              </button>
+              <button
+                className="admin-button secondary"
+                onClick={() => router.push("/admin/properties")}
               >
                 Add New Property
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Inquiry Management</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                className="w-full"
+          <div className="admin-action-card">
+            <div className="admin-action-title">Inquiry Management</div>
+            <div className="admin-action-buttons">
+              <button
+                className="admin-button"
                 onClick={() => router.push("/admin/inquiries")}
               >
                 Manage Inquiries ({stats?.totalInquiries || 0})
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
+              </button>
+              <button
+                className="admin-button secondary"
                 onClick={() => router.push("/admin/inquiries?status=pending")}
               >
                 Pending Inquiries ({stats?.pendingInquiries || 0})
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </div>
 
-          {(session.user as any)?.isSuperAdmin && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Management</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  className="w-full"
+          {user && (
+            <div className="admin-action-card">
+              <div className="admin-action-title">Admin Management</div>
+              <div className="admin-action-buttons">
+                <button
+                  className="admin-button"
                   onClick={() => router.push("/admin/admins")}
                 >
                   Manage Admins
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
+                </button>
+                <button
+                  className="admin-button secondary"
                   onClick={() => router.push("/admin/admins/new")}
                 >
                   Add New Admin
-                </Button>
-              </CardContent>
-            </Card>
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>

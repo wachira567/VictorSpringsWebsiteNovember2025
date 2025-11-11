@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Home, Star, ArrowRight } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { SignInButton } from "@clerk/nextjs";
 
 export default function HomePage() {
   const router = useRouter();
@@ -291,14 +291,15 @@ export default function HomePage() {
                 Browse Properties
               </Button>
             </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-blue-600"
-              onClick={() => signIn()}
-            >
-              List Your Property
-            </Button>
+            <SignInButton>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-blue-600"
+              >
+                List Your Property
+              </Button>
+            </SignInButton>
           </div>
         </div>
       </section>

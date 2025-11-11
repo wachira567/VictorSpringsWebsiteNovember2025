@@ -4,22 +4,12 @@ import Property from "@/models/Property";
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { db } = await connectToDatabase();
+    await connectToDatabase(); // Remove db destructuring since we're using mongoose
 
-    const params = await context.params;
-    const { id } = params;
-
-    // Try to find property in database first
-    let property = null;
-    try {
-      property = await Property.findById(id);
-    } catch (error) {
-      // If it's an ObjectId error, skip database lookup and use mock data
-      console.log("Database lookup failed, using mock data");
-    }
+    const property = await Property.findById(params.id).lean();
 
     if (!property) {
       return NextResponse.json(
@@ -32,7 +22,7 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching property:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch property" },
       { status: 500 }
     );
   }
@@ -40,61 +30,34 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { db } = await connectToDatabase();
+    await connectToDatabase(); // Remove db destructuring since we're using mongoose
 
-    const params = await context.params;
-    const { id } = params;
     const body = await request.json();
-    const {
-      title,
-      description,
-      price,
-      location,
-      propertyType,
-      bedrooms,
-      bathrooms,
-      area,
-      amenities,
-      images,
-      featured,
-      available,
-    } = body;
 
-    const updatedProperty = await Property.findByIdAndUpdate(
-      id,
+    const property = await Property.findByIdAndUpdate(
+      params.id,
       {
-        title,
-        description,
-        price,
-        location,
-        propertyType,
-        bedrooms,
-        bathrooms,
-        area,
-        amenities,
-        images,
-        featured,
-        available,
+        ...body,
         updatedAt: new Date(),
       },
-      { new: true, runValidators: true }
+      { new: true }
     );
 
-    if (!updatedProperty) {
+    if (!property) {
       return NextResponse.json(
         { error: "Property not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(updatedProperty);
+    return NextResponse.json(property);
   } catch (error) {
     console.error("Error updating property:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to update property" },
       { status: 500 }
     );
   }
@@ -102,16 +65,14 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { db } = await connectToDatabase();
+    await connectToDatabase(); // Remove db destructuring since we're using mongoose
 
-    const params = await context.params;
-    const { id } = params;
-    const deletedProperty = await Property.findByIdAndDelete(id);
+    const property = await Property.findByIdAndDelete(params.id);
 
-    if (!deletedProperty) {
+    if (!property) {
       return NextResponse.json(
         { error: "Property not found" },
         { status: 404 }
@@ -122,7 +83,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Error deleting property:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to delete property" },
       { status: 500 }
     );
   }
