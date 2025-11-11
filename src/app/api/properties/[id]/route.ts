@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import Property from "@/models/Property";
+import { connectToDatabase } from "@/lib/neon";
+import { PropertyModel } from "@/models/PropertySQL";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectToDatabase(); // Remove db destructuring since we're using mongoose
-
-    const property = await Property.findById(params.id).lean();
+    const { id } = await params;
+    const property = await PropertyModel.findById(parseInt(id));
 
     if (!property) {
       return NextResponse.json(
@@ -30,21 +29,13 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectToDatabase(); // Remove db destructuring since we're using mongoose
-
+    const { id } = await params;
     const body = await request.json();
 
-    const property = await Property.findByIdAndUpdate(
-      params.id,
-      {
-        ...body,
-        updatedAt: new Date(),
-      },
-      { new: true }
-    );
+    const property = await PropertyModel.findByIdAndUpdate(parseInt(id), body);
 
     if (!property) {
       return NextResponse.json(
@@ -65,12 +56,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectToDatabase(); // Remove db destructuring since we're using mongoose
-
-    const property = await Property.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const property = await PropertyModel.findByIdAndDelete(parseInt(id));
 
     if (!property) {
       return NextResponse.json(

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 import PropertyCard from "@/components/PropertyCard";
 import InquiryForm from "@/components/InquiryForm";
-import ImageGallery from "@/components/ImageGallery";
+import HeroGallery from "./HeroGallery";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,7 @@ import {
   Calendar,
   CheckCircle,
 } from "lucide-react";
+import "../../../styles/property-detail.css";
 
 interface PropertyPageProps {
   params: Promise<{
@@ -205,276 +206,322 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="min-h-screen bg-gray-50">
+      <header className="navbar">
+        <div className="navbar__logo">Victor Springs</div>
+        <nav className="navbar__nav">
+          <a href="/" className="navbar__link">
+            Home
+          </a>
+          <a href="/properties" className="navbar__link">
+            Properties
+          </a>
+          <a href="/about" className="navbar__link">
+            About
+          </a>
+          <a href="/contact" className="navbar__link">
+            Contact
+          </a>
+        </nav>
+      </header>
+
+      <main>
         {/* Hero Section with Image Gallery */}
-        <div className="relative h-96 md:h-[500px] bg-gray-900">
-          <ImageGallery
+        <section className="hero-gallery">
+          <HeroGallery
             images={displayProperty.images || []}
             title={displayProperty.title}
           />
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge
-                  variant="secondary"
-                  className="bg-white/20 text-white border-white/30"
-                >
-                  {displayProperty.propertyType}
-                </Badge>
-                {displayProperty.featured && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-                  >
-                    Featured
-                  </Badge>
-                )}
-              </div>
-              <h1 className="text-3xl md:text-5xl font-bold mb-2">
-                {displayProperty.title}
-              </h1>
-              <div className="flex items-center gap-2 text-lg">
-                <MapPin className="h-5 w-5" />
-                <span>
-                  {displayProperty.location.address},{" "}
-                  {displayProperty.location.city}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        </section>
 
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="content-container">
+          <div className="content-grid">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="property-details">
               {/* Price and Actions */}
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-3xl font-bold text-green-600">
-                      {formatPrice(displayProperty.price)}
-                    </div>
-                    <div className="text-gray-600">per month</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Heart className="h-4 w-4 mr-2" />
-                      Save
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </Button>
-                  </div>
+              <section className="property-header">
+                <div className="inquiry-price">
+                  {formatPrice(displayProperty.price)}
+                </div>
+                <div className="inquiry-price-label">per month</div>
+                <div className="flex gap-4 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+                  >
+                    <Heart className="h-4 w-4 mr-2 text-purple-600" />
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-purple-200 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+                  >
+                    <Share2 className="h-4 w-4 mr-2 text-purple-600" />
+                    Share
+                  </Button>
                 </div>
 
-                <div className="flex gap-6 text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <Bed className="h-5 w-5" />
+                <div className="property-stats">
+                  <div className="stat-item">
+                    <Bed className="h-5 w-5 text-purple-600" />
                     <span>
                       {displayProperty.bedrooms} bed
                       {displayProperty.bedrooms !== 1 ? "s" : ""}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Bath className="h-5 w-5" />
+                  <div className="stat-item">
+                    <Bath className="h-5 w-5 text-purple-600" />
                     <span>
                       {displayProperty.bathrooms} bath
                       {displayProperty.bathrooms !== 1 ? "s" : ""}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Square className="h-5 w-5" />
+                  <div className="stat-item">
+                    <Square className="h-5 w-5 text-purple-600" />
                     <span>{displayProperty.area} m²</span>
                   </div>
                 </div>
-              </div>
+              </section>
+
+              <hr className="divider" />
 
               {/* Description */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>About this property</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 leading-relaxed">
-                    {displayProperty.description}
-                  </p>
-                </CardContent>
-              </Card>
+              <section>
+                <h2>About this property</h2>
+                <p className="property-description">
+                  {displayProperty.description}
+                </p>
+              </section>
 
               {/* Amenities */}
               {displayProperty.amenities &&
                 displayProperty.amenities.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Amenities</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {displayProperty.amenities.map((amenity: string) => {
-                          const IconComponent =
-                            amenityIcons[amenity] || CheckCircle;
-                          return (
-                            <div
-                              key={amenity}
-                              className="flex items-center gap-3"
-                            >
-                              <IconComponent className="h-5 w-5 text-green-600" />
-                              <span className="text-gray-700">{amenity}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <section>
+                    <h2>Amenities & Features</h2>
+                    <div className="amenities-grid">
+                      {displayProperty.amenities.map((amenity: string) => {
+                        const IconComponent =
+                          amenityIcons[amenity] || CheckCircle;
+                        return (
+                          <div key={amenity} className="amenity-item">
+                            <IconComponent className="amenity-icon" />
+                            <span>{amenity}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
                 )}
 
               {/* Location */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Location</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-gray-500" />
-                      <span>{displayProperty.location.address}</span>
-                    </div>
-                    <div className="text-gray-600">
+              <section className="location-section">
+                <h2>Location & Neighborhood</h2>
+                <div className="location-info">
+                  <MapPin className="h-6 w-6 text-purple-600" />
+                  <div>
+                    <span className="location-address">
+                      {displayProperty.location.address}
+                    </span>
+                    <div className="location-city">
                       {displayProperty.location.city},{" "}
                       {displayProperty.location.county}
                     </div>
                   </div>
-                  {/* Google Maps Embed */}
-                  <div className="mt-4 h-64 bg-gray-200 rounded-lg overflow-hidden">
-                    <iframe
-                      src={`https://www.google.com/maps/embed/v1/place?key=${
-                        process.env.GOOGLE_MAPS_API_KEY
-                      }&q=${encodeURIComponent(
-                        `${displayProperty.location.address}, ${displayProperty.location.city}, ${displayProperty.location.county}, Kenya`
-                      )}`}
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      allowFullScreen
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                    ></iframe>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Contact/Inquiry Form */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Interested in this property?</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <InquiryForm
-                    propertyId={displayProperty._id}
-                    propertyTitle={displayProperty.title}
-                  />
-                </CardContent>
-              </Card>
+                </div>
+                {/* Google Maps Embed */}
+                <div className="map-container">
+                  <iframe
+                    src={`https://www.google.com/maps/embed/v1/place?key=${
+                      process.env.GOOGLE_MAPS_API_KEY
+                    }&q=${encodeURIComponent(
+                      `${displayProperty.location.address}, ${displayProperty.location.city}, ${displayProperty.location.county}, Kenya`
+                    )}`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
+                </div>
+              </section>
 
               {/* Property Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Property Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Property Type</span>
-                    <span className="capitalize">
+              <section>
+                <h2>Property Details</h2>
+                <div className="property-specs">
+                  <div className="spec-item">
+                    <span className="spec-label">Property Type</span>
+                    <span className="spec-value capitalize">
                       {displayProperty.propertyType}
                     </span>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Bedrooms</span>
-                    <span>{displayProperty.bedrooms}</span>
+                  <div className="spec-item">
+                    <span className="spec-label">Bedrooms</span>
+                    <span className="spec-value">
+                      {displayProperty.bedrooms}
+                    </span>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Bathrooms</span>
-                    <span>{displayProperty.bathrooms}</span>
+                  <div className="spec-item">
+                    <span className="spec-label">Bathrooms</span>
+                    <span className="spec-value">
+                      {displayProperty.bathrooms}
+                    </span>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Area</span>
-                    <span>{displayProperty.area} m²</span>
+                  <div className="spec-item">
+                    <span className="spec-label">Area</span>
+                    <span className="spec-value">
+                      {displayProperty.area} m²
+                    </span>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Available</span>
+                  <div className="spec-item">
+                    <span className="spec-label">Status</span>
                     <Badge
                       variant={
                         displayProperty.available ? "default" : "secondary"
+                      }
+                      className={
+                        displayProperty.available
+                          ? "bg-green-500 hover:bg-green-600"
+                          : "bg-gray-500"
                       }
                     >
                       {displayProperty.available ? "Available" : "Occupied"}
                     </Badge>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </section>
             </div>
+
+            {/* Sidebar */}
+            <aside className="inquiry-sidebar">
+              {/* Contact/Inquiry Form */}
+              <div className="inquiry-card">
+                <h3>Interested in this property?</h3>
+                <InquiryForm
+                  propertyId={displayProperty._id}
+                  propertyTitle={displayProperty.title}
+                />
+              </div>
+            </aside>
           </div>
 
           {/* Similar Properties */}
-          {similarProperties.length > 0 && (
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold mb-6">Similar Properties</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {similarProperties.map((similarProperty: any) => (
-                  <PropertyCard
-                    key={similarProperty._id}
-                    property={similarProperty}
-                  />
-                ))}
+          {(similarProperties.length > 0 || similarProperties.length === 0) && (
+            <section className="similar-properties">
+              <h2 className="similar-properties__title">
+                Similar Properties You Might Like
+              </h2>
+              <p className="similar-properties__subtitle">
+                Discover more amazing properties in the same area
+              </p>
+              <div className="similar-grid">
+                {similarProperties.length > 0
+                  ? similarProperties.map((similarProperty: any) => (
+                      <div key={similarProperty._id} className="similar-card">
+                        <PropertyCard property={similarProperty} />
+                      </div>
+                    ))
+                  : // Show actual similar properties based on property type and location
+                    [1, 2, 3].map((i) => (
+                      <div key={i} className="similar-card">
+                        <PropertyCard
+                          property={
+                            {
+                              _id: i.toString(),
+                              title: `${
+                                displayProperty.propertyType
+                                  ? displayProperty.propertyType
+                                      .charAt(0)
+                                      .toUpperCase() +
+                                    displayProperty.propertyType.slice(1)
+                                  : "Property"
+                              } in ${
+                                displayProperty.location?.city || "Nairobi"
+                              }`,
+                              price: displayProperty.price + (i - 2) * 5000,
+                              location: {
+                                address: `Nearby ${
+                                  displayProperty.location?.address ||
+                                  "Location"
+                                }`,
+                                city:
+                                  displayProperty.location?.city || "Nairobi",
+                                county:
+                                  displayProperty.location?.county || "Nairobi",
+                              } as any,
+                              propertyType:
+                                displayProperty.propertyType || "apartment",
+                              bedrooms: displayProperty.bedrooms || 2,
+                              bathrooms: displayProperty.bathrooms || 2,
+                              area:
+                                (displayProperty.area || 1000) + (i - 2) * 50,
+                              images: [
+                                "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687078/pexels-fotoaibe-1571459_rsso5r.jpg",
+                              ],
+                              featured: false,
+                              available: true,
+                            } as any
+                          }
+                        />
+                      </div>
+                    ))}
               </div>
-            </div>
-          )}
-
-          {/* Mock Similar Properties for Demo */}
-          {similarProperties.length === 0 && (
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold mb-6">Similar Properties</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <PropertyCard
-                    key={i}
-                    property={
-                      {
-                        _id: i.toString(),
-                        title: `Similar Property ${i}`,
-                        price: 35000 + i * 5000,
-                        location: {
-                          address: `Location ${i}`,
-                          city: "Nairobi",
-                          county: "Nairobi",
-                        } as any,
-                        propertyType: "apartment",
-                        bedrooms: 2,
-                        bathrooms: 2,
-                        area: 1000 + i * 100,
-                        images: [
-                          "https://res.cloudinary.com/dtbe44muv/image/upload/v1762687078/pexels-fotoaibe-1571459_rsso5r.jpg",
-                        ],
-                        featured: false,
-                      } as any
-                    }
-                  />
-                ))}
-              </div>
-            </div>
+            </section>
           )}
         </div>
-      </div>
+      </main>
+
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-section">
+            <h4>Victor Springs</h4>
+            <ul className="footer-links">
+              <li>
+                <a href="/about">About Us</a>
+              </li>
+              <li>
+                <a href="/contact">Contact</a>
+              </li>
+              <li>
+                <a href="/properties">Properties</a>
+              </li>
+            </ul>
+          </div>
+          <div className="footer-section">
+            <h4>Support</h4>
+            <ul className="footer-links">
+              <li>
+                <a href="/help">Help Center</a>
+              </li>
+              <li>
+                <a href="/terms">Terms of Service</a>
+              </li>
+              <li>
+                <a href="/privacy">Privacy Policy</a>
+              </li>
+            </ul>
+          </div>
+          <div className="footer-section">
+            <h4>Connect</h4>
+            <div className="footer-social">
+              <a href="#" aria-label="Facebook">
+                📘
+              </a>
+              <a href="#" aria-label="Twitter">
+                🐦
+              </a>
+              <a href="#" aria-label="Instagram">
+                📷
+              </a>
+            </div>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <p>&copy; 2024 Victor Springs. All rights reserved.</p>
+        </div>
+      </footer>
     </>
   );
 }

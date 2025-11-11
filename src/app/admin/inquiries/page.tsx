@@ -197,24 +197,21 @@ export default function AdminInquiriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 pt-24 pb-12 px-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-12 fade-in">
-          <div>
-            <h1 className="text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-              Inquiry Management
-            </h1>
-            <p className="text-xl text-gray-700 font-medium">
-              Manage customer inquiries and responses with style
-            </p>
-            <div className="w-24 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mt-4"></div>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Inquiry Management
+          </h1>
+          <p className="text-gray-600">
+            Manage customer inquiries and responses
+          </p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white border border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">
                 Total Inquiries
@@ -222,13 +219,13 @@ export default function AdminInquiriesPage() {
               <div className="text-2xl">📧</div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="text-3xl font-bold text-gray-900">
                 {inquiries.length}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white border border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">
                 Pending
@@ -236,13 +233,13 @@ export default function AdminInquiriesPage() {
               <div className="text-2xl">⏳</div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-yellow-500">
+              <div className="text-3xl font-bold text-yellow-600">
                 {inquiries.filter((i) => i.status === "pending").length}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white border border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">
                 Contacted
@@ -250,13 +247,13 @@ export default function AdminInquiriesPage() {
               <div className="text-2xl">📞</div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+              <div className="text-3xl font-bold text-blue-600">
                 {inquiries.filter((i) => i.status === "contacted").length}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white border border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">
                 Resolved
@@ -264,7 +261,7 @@ export default function AdminInquiriesPage() {
               <div className="text-2xl">✅</div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-green-500 to-teal-500 bg-clip-text text-transparent">
+              <div className="text-3xl font-bold text-green-600">
                 {inquiries.filter((i) => i.status === "resolved").length}
               </div>
             </CardContent>
@@ -272,19 +269,19 @@ export default function AdminInquiriesPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <div className="bg-white p-6 mb-8 border border-gray-200 rounded-lg">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
                 placeholder="Search inquiries..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                className="pl-10 h-12 border border-gray-300 focus:border-blue-500 rounded"
               />
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-48 h-14 border-2 border-gray-200 focus:border-blue-500 rounded-xl">
+              <SelectTrigger className="w-full lg:w-56 h-12 border border-gray-300 focus:border-blue-500 rounded">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -302,7 +299,7 @@ export default function AdminInquiriesPage() {
           {filteredInquiries.map((inquiry) => (
             <Card
               key={inquiry._id}
-              className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg"
+              className="bg-white border border-gray-200 rounded-lg"
             >
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -337,47 +334,65 @@ export default function AdminInquiriesPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0">
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-4 border border-gray-300 hover:bg-gray-50"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-2xl">
                         <DialogHeader>
-                          <DialogTitle>Inquiry Details</DialogTitle>
+                          <DialogTitle className="text-xl font-bold">
+                            Inquiry Details
+                          </DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
-                          <div>
-                            <Label className="font-semibold">Customer</Label>
-                            <p>{inquiry.name}</p>
-                            <p className="text-sm text-gray-600">
+                          <div className="bg-gray-50 p-4 rounded">
+                            <Label className="font-semibold mb-2 block">
+                              Customer
+                            </Label>
+                            <p className="font-medium">{inquiry.name}</p>
+                            <p className="text-sm text-gray-600 mt-1">
                               {inquiry.email}
                             </p>
                             <p className="text-sm text-gray-600">
                               {inquiry.phone}
                             </p>
                           </div>
-                          <div>
-                            <Label className="font-semibold">Property</Label>
-                            <p>{inquiry.property?.title || "Unknown"}</p>
-                            <p className="text-sm text-gray-600">
+                          <div className="bg-gray-50 p-4 rounded">
+                            <Label className="font-semibold mb-2 block">
+                              Property
+                            </Label>
+                            <p className="font-medium">
+                              {inquiry.property?.title || "Unknown"}
+                            </p>
+                            <p className="text-sm text-gray-600 mt-1">
                               {inquiry.property?.location.city || ""}
                             </p>
                           </div>
-                          <div>
-                            <Label className="font-semibold">Message</Label>
-                            <p className="mt-1">{inquiry.message}</p>
+                          <div className="bg-gray-50 p-4 rounded">
+                            <Label className="font-semibold mb-2 block">
+                              Message
+                            </Label>
+                            <p className="mt-1 leading-relaxed">
+                              {inquiry.message}
+                            </p>
                           </div>
-                          <div>
-                            <Label className="font-semibold">
+                          <div className="bg-gray-50 p-4 rounded">
+                            <Label className="font-semibold mb-2 block">
                               Preferred Contact
                             </Label>
                             <p className="flex items-center gap-2 mt-1">
                               {getContactIcon(inquiry.preferredContact)}
-                              {inquiry.preferredContact}
+                              <span className="capitalize">
+                                {inquiry.preferredContact}
+                              </span>
                             </p>
                           </div>
                         </div>
@@ -387,12 +402,13 @@ export default function AdminInquiriesPage() {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="h-9 px-4 border border-gray-300 hover:bg-gray-50"
                       onClick={() => {
                         setSelectedInquiry(inquiry);
                         setIsResponseDialogOpen(true);
                       }}
                     >
-                      <MessageSquare className="h-4 w-4 mr-1" />
+                      <MessageSquare className="h-4 w-4 mr-2" />
                       Respond
                     </Button>
 
@@ -400,11 +416,12 @@ export default function AdminInquiriesPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="h-9 px-4 border border-gray-300 hover:bg-gray-50"
                         onClick={() =>
                           updateInquiryStatus(inquiry._id, "contacted")
                         }
                       >
-                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <CheckCircle className="h-4 w-4 mr-2" />
                         Mark Contacted
                       </Button>
                     )}
@@ -413,11 +430,12 @@ export default function AdminInquiriesPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="h-9 px-4 border border-gray-300 hover:bg-gray-50"
                         onClick={() =>
                           updateInquiryStatus(inquiry._id, "resolved")
                         }
                       >
-                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <CheckCircle className="h-4 w-4 mr-2" />
                         Mark Resolved
                       </Button>
                     )}
@@ -441,22 +459,40 @@ export default function AdminInquiriesPage() {
         >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Respond to Inquiry</DialogTitle>
+              <DialogTitle className="text-xl font-bold">
+                Respond to Inquiry
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded">
+                <Label className="font-semibold mb-2 block">
+                  Customer Details
+                </Label>
+                <p className="font-medium">{selectedInquiry?.name}</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {selectedInquiry?.email}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {selectedInquiry?.phone}
+                </p>
+              </div>
               <div>
-                <Label htmlFor="response">Response Message</Label>
+                <Label htmlFor="response" className="font-semibold mb-3 block">
+                  Response Message
+                </Label>
                 <Textarea
                   id="response"
                   value={responseMessage}
                   onChange={(e) => setResponseMessage(e.target.value)}
                   placeholder="Type your response here..."
                   rows={6}
+                  className="border border-gray-300 focus:border-blue-500 rounded resize-none"
                 />
               </div>
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end space-x-3 pt-4">
                 <Button
                   variant="outline"
+                  className="h-10 px-6 border border-gray-300 hover:bg-gray-50"
                   onClick={() => {
                     setIsResponseDialogOpen(false);
                     setResponseMessage("");
@@ -466,6 +502,7 @@ export default function AdminInquiriesPage() {
                   Cancel
                 </Button>
                 <Button
+                  className="h-10 px-6 bg-blue-600 hover:bg-blue-700"
                   onClick={sendResponse}
                   disabled={!responseMessage.trim()}
                 >

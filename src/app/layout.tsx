@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/Providers";
-import Navbar from "@/components/Navbar";
+import NavbarNew from "@/components/NavbarNew";
+import FooterNew from "@/components/FooterNew";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
 import "./globals.css";
@@ -80,11 +81,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body className={`${inter.variable} antialiased`}>
         <Providers>
-          <Navbar />
-          <main className="pt-16">{children}</main>
+          <NavbarNew />
+          <main className="pt-20">{children}</main>
+          <FooterNew />
           <Toaster />
           <SonnerToaster position="top-right" richColors />
         </Providers>

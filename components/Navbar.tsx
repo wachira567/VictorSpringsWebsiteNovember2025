@@ -72,6 +72,38 @@ export default function Navbar() {
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-green-500 to-blue-500 group-hover:w-full transition-all duration-300 ease-out"></div>
             </Link>
           </li>
+          <li>
+            <Link href="/about" className="navbar-link group relative">
+              <span className="relative z-10">About</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-blue-500/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300 ease-out"></div>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-500 to-blue-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+            </Link>
+          </li>
+          <li>
+            <Link href="/contact" className="navbar-link group relative">
+              <span className="relative z-10">Contact</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300 ease-out"></div>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-teal-500 to-cyan-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+            </Link>
+          </li>
+          {user && (
+            <>
+              <li>
+                <Link href="/profile" className="navbar-link group relative">
+                  <span className="relative z-10">Profile</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-purple-500/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300 ease-out"></div>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-violet-500 to-purple-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+                </Link>
+              </li>
+              <li>
+                <Link href="/saved" className="navbar-link group relative">
+                  <span className="relative z-10">Saved</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-rose-500/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300 ease-out"></div>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-rose-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+                </Link>
+              </li>
+            </>
+          )}
           {isAdmin && (
             <>
               <li>
@@ -111,6 +143,32 @@ export default function Navbar() {
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300 ease-out"></div>
                   <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/content"
+                  className="navbar-link group relative"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <span className="text-xs">📝</span>
+                    Content
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300 ease-out"></div>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/admins"
+                  className="navbar-link group relative"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <span className="text-xs">👥</span>
+                    Manage Admins
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300 ease-out"></div>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-red-500 to-orange-500 group-hover:w-full transition-all duration-300 ease-out"></div>
                 </Link>
               </li>
             </>
@@ -197,6 +255,62 @@ export default function Navbar() {
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-green-500 to-blue-500 group-hover:w-full transition-all duration-300 ease-out"></div>
             </Link>
           </li>
+          <li>
+            <Link
+              href="/about"
+              className="navbar-link group relative block py-3"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span className="flex items-center gap-3">
+                <span className="text-lg">ℹ️</span>
+                About
+              </span>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-500 to-blue-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/contact"
+              className="navbar-link group relative block py-3"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span className="flex items-center gap-3">
+                <span className="text-lg">📞</span>
+                Contact
+              </span>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-teal-500 to-cyan-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+            </Link>
+          </li>
+          {user && (
+            <>
+              <li>
+                <Link
+                  href="/profile"
+                  className="navbar-link group relative block py-3"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-lg">👤</span>
+                    Profile
+                  </span>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-violet-500 to-purple-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/saved"
+                  className="navbar-link group relative block py-3"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-lg">❤️</span>
+                    Saved
+                  </span>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-rose-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+                </Link>
+              </li>
+            </>
+          )}
           {isAdmin && (
             <>
               <li>
@@ -236,6 +350,32 @@ export default function Navbar() {
                     Inquiries
                   </span>
                   <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/content"
+                  className="navbar-link group relative block py-3"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-lg">📝</span>
+                    Content
+                  </span>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 group-hover:w-full transition-all duration-300 ease-out"></div>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/admins"
+                  className="navbar-link group relative block py-3"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-lg">👥</span>
+                    Manage Admins
+                  </span>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-red-500 to-orange-500 group-hover:w-full transition-all duration-300 ease-out"></div>
                 </Link>
               </li>
             </>

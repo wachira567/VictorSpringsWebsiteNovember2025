@@ -1,29 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import Property from "@/models/Property";
+import PropertyModel from "@/models/PropertySQL";
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("API: Fetching properties...");
-    await connectToDatabase(); // Remove db destructuring since we're using mongoose
-    console.log("API: Connected to database");
-
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "12");
     const skip = (page - 1) * limit;
 
+    // Handle random featured properties for homepage
+    const random = searchParams.get("random");
+    if (random === "true") {
+      const featured = searchParams.get("featured");
+      if (featured === "true") {
+        // Get random featured properties for homepage
+        const client = await import("@/lib/neon").then((m) =>
+          m.connectToDatabase()
+        );
+
+        const query = `
+          SELECT id, title, description, price, address, city, county, lat, lng, place_id as "placeId",
+                 property_type as "propertyType", bedrooms, bathrooms, area, amenities, images,
+                 featured, available, created_at as "createdAt", updated_at as "updatedAt"
+          FROM properties
+          WHERE featured = true AND available = true
+          ORDER BY RANDOM()
+          LIMIT $1
+        `;
+
+        const result = await client.query(query, [limit]);
+        await client.release();
+
+        return NextResponse.json({
+          properties: result.rows.map((row: any) => ({
+            ...row,
+            amenities: row.amenities || [],
+            images: row.images || [],
+          })),
+          pagination: {
+            page: 1,
+            limit,
+            total: result.rows.length,
+            totalPages: 1,
+            hasNext: false,
+            hasPrev: false,
+          },
+        });
+      }
+    }
+
     // Build filter object
     const filter: any = {};
 
-    // Location filter
+    // Location filter - optimized for better search
     const location = searchParams.get("location");
     if (location) {
-      filter.$or = [
-        { "location.city": { $regex: location, $options: "i" } },
-        { "location.address": { $regex: location, $options: "i" } },
-        { "location.county": { $regex: location, $options: "i" } },
-      ];
+      filter.city = location; // Single filter that searches across city, county, and address
     }
 
     // Property type filter
@@ -84,27 +116,34 @@ export async function GET(request: NextRequest) {
     // Exclude specific property (for similar properties)
     const exclude = searchParams.get("exclude");
     if (exclude) {
-      filter._id = { $ne: exclude };
+      filter._id = { $ne: parseInt(exclude) };
     }
 
     // Sorting
-    const sortBy = searchParams.get("sortBy") || "createdAt";
-    const sortOrder = searchParams.get("sortOrder") === "asc" ? 1 : -1;
-    const sort: any = {};
-    sort[sortBy] = sortOrder;
+    const sortParam = searchParams.get("sort");
+    let sort: any = { createdAt: -1 }; // Default sort
+
+    if (sortParam) {
+      if (sortParam === "price:asc") {
+        sort = { price: 1 };
+      } else if (sortParam === "price:desc") {
+        sort = { price: -1 };
+      } else if (sortParam === "featured") {
+        sort = { featured: -1, createdAt: -1 };
+      } else if (sortParam === "newest") {
+        sort = { createdAt: -1 };
+      }
+    }
 
     // Execute query
-    const properties = await Property.find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const properties = await PropertyModel.find(filter, {
+      sort,
+      skip,
+      limit,
+    });
 
-    const total = await Property.countDocuments(filter);
+    const total = await PropertyModel.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
-
-    // If no properties in database, return empty array instead of mock data
-    // This ensures we test real DB connection
 
     return NextResponse.json({
       properties,
@@ -128,8 +167,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase(); // Remove db destructuring since we're using mongoose
-
     const body = await request.json();
 
     // Validate required fields
@@ -149,11 +186,35 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Transform location data for SQL
+    const locationData = {
+      address: body.location.address,
+      city: body.location.city,
+      county: body.location.county,
+      lat: body.location.googlePin.lat,
+      lng: body.location.googlePin.lng,
+      placeId: body.location.googlePin.placeId,
+    };
+
     // Create property
-    const property = await Property.create({
-      ...body,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    const property = await PropertyModel.create({
+      title: body.title,
+      description: body.description,
+      price: body.price,
+      address: locationData.address,
+      city: locationData.city,
+      county: locationData.county,
+      lat: locationData.lat,
+      lng: locationData.lng,
+      placeId: locationData.placeId,
+      propertyType: body.propertyType,
+      bedrooms: body.bedrooms,
+      bathrooms: body.bathrooms,
+      area: body.area,
+      amenities: body.amenities || [],
+      images: body.images || [],
+      featured: body.featured || false,
+      available: body.available !== false,
     });
 
     return NextResponse.json(property, { status: 201 });

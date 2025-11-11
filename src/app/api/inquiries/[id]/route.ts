@@ -1,26 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import Inquiry from "@/models/Inquiry";
+import { connectToDatabase } from "@/lib/neon";
+import { InquiryModel } from "@/models/InquirySQL";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectToDatabase(); // Remove db destructuring since we're using mongoose
-
+    const { id } = await params;
     const body = await request.json();
-    const { status, ...updateData } = body;
+    const { status, name, email, phone, message, propertyId } = body;
 
-    const inquiry = await Inquiry.findByIdAndUpdate(
-      params.id,
-      {
-        ...updateData,
-        status,
-        updatedAt: new Date(),
-      },
-      { new: true }
-    ).populate("propertyId", "title location price");
+    const inquiry = await InquiryModel.findByIdAndUpdate(parseInt(id), {
+      status,
+      name,
+      email,
+      phone,
+      message,
+      propertyId: propertyId ? parseInt(propertyId) : undefined,
+    });
 
     if (!inquiry) {
       return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });

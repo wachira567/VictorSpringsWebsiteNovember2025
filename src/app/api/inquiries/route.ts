@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import Inquiry from "@/models/Inquiry";
-import Property from "@/models/Property";
+import { connectToDatabase } from "@/lib/neon";
+import { InquiryModel } from "@/models/InquirySQL";
+import { PropertyModel } from "@/models/PropertySQL";
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,14 +52,13 @@ export async function GET(request: NextRequest) {
     sort[sortBy] = sortOrder;
 
     // Execute query with property population
-    const inquiries = await Inquiry.find(filter)
-      .populate("propertyId", "title location price")
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const inquiries = await InquiryModel.find(filter, {
+      skip,
+      limit,
+      sort,
+    });
 
-    const total = await Inquiry.countDocuments(filter);
+    const total = await InquiryModel.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
@@ -100,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate property exists
-    const property = await Property.findById(body.propertyId);
+    const property = await PropertyModel.findById(body.propertyId);
     if (!property) {
       return NextResponse.json(
         { error: "Property not found" },
@@ -109,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create inquiry
-    const inquiry = await Inquiry.create({
+    const inquiry = await InquiryModel.create({
       ...body,
       status: "pending",
       isVerified: false, // Will be updated after OTP verification
@@ -118,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     // TODO: Send OTP verification to phone/email
     // For now, we'll mark as verified for demo purposes
-    await Inquiry.findByIdAndUpdate(inquiry._id, { isVerified: true });
+    await InquiryModel.findByIdAndUpdate(inquiry.id, { isVerified: true });
 
     return NextResponse.json(
       {
@@ -151,14 +150,10 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update inquiry
-    const inquiry = await Inquiry.findByIdAndUpdate(
-      id,
-      {
-        ...updateData,
-        updatedAt: new Date(),
-      },
-      { new: true }
-    ).populate("propertyId", "title location price");
+    const inquiry = await InquiryModel.findByIdAndUpdate(id, {
+      ...updateData,
+      updatedAt: new Date(),
+    });
 
     if (!inquiry) {
       return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });

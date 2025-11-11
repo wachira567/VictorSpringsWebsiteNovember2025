@@ -1,28 +1,27 @@
-import { connectToDatabase } from "../lib/mongodb";
-import Property from "../models/Property";
-import User from "../models/User";
-import Admin from "../models/Admin";
+import { connectToDatabase } from "../lib/neon";
+import { PropertyModel } from "../models/PropertySQL";
+import { UserModel } from "../models/UserSQL";
+import { AdminModel } from "../models/AdminSQL";
 import bcrypt from "bcryptjs";
 
 async function seedDatabase() {
   try {
-    const { db } = await connectToDatabase();
-    console.log("Connected to database");
+    await connectToDatabase();
+    console.log("Connected to Neon database");
 
     // Clear existing data
-    await Property.deleteMany({});
-    await User.deleteMany({});
-    await Admin.deleteMany({});
+    await PropertyModel.deleteAll();
+    await UserModel.deleteAll();
+    await AdminModel.deleteAll();
 
     // Create super admin
     const hashedPassword = await bcrypt.hash("admin123", 12);
-    const superAdmin = new Admin({
+    const superAdmin = await AdminModel.create({
       email: "admin@example.com",
       password: hashedPassword,
       isSuperAdmin: true,
-      createdBy: null as any, // Super admin creates themselves
+      createdBy: null,
     });
-    await superAdmin.save();
     console.log("Super admin created");
 
     // Create sample properties
@@ -32,16 +31,12 @@ async function seedDatabase() {
         description:
           "Beautiful modern apartment with stunning city views, fully furnished with high-end appliances.",
         price: 85000,
-        location: {
-          address: "Westlands Road, Nairobi",
-          city: "Nairobi",
-          county: "Nairobi",
-          googlePin: {
-            lat: -1.263,
-            lng: 36.8065,
-            placeId: "ChIJp0lN2HIRLxgRTJKXslQCz_c",
-          },
-        },
+        address: "Westlands Road, Nairobi",
+        city: "Nairobi",
+        county: "Nairobi",
+        lat: -1.263,
+        lng: 36.8065,
+        placeId: "ChIJp0lN2HIRLxgRTJKXslQCz_c",
         propertyType: "apartment" as const,
         bedrooms: 2,
         bathrooms: 2,
@@ -58,16 +53,12 @@ async function seedDatabase() {
         description:
           "Spacious 4BR villa with private garden, perfect for families seeking tranquility.",
         price: 250000,
-        location: {
-          address: "Karen Road, Nairobi",
-          city: "Nairobi",
-          county: "Nairobi",
-          googlePin: {
-            lat: -1.3167,
-            lng: 36.6975,
-            placeId: "ChIJc6e3soARLxgR8I4F2nK8z_c",
-          },
-        },
+        address: "Karen Road, Nairobi",
+        city: "Nairobi",
+        county: "Nairobi",
+        lat: -1.3167,
+        lng: 36.6975,
+        placeId: "ChIJc6e3soARLxgR8I4F2nK8z_c",
         propertyType: "villa" as const,
         bedrooms: 4,
         bathrooms: 3,
@@ -90,16 +81,12 @@ async function seedDatabase() {
         description:
           "Compact and efficient studio apartment, ideal for young professionals.",
         price: 35000,
-        location: {
-          address: "Kilimani Road, Nairobi",
-          city: "Nairobi",
-          county: "Nairobi",
-          googlePin: {
-            lat: -1.2917,
-            lng: 36.7833,
-            placeId: "ChIJd6e3soARLxgR8I4F2nK8z_d",
-          },
-        },
+        address: "Kilimani Road, Nairobi",
+        city: "Nairobi",
+        county: "Nairobi",
+        lat: -1.2917,
+        lng: 36.7833,
+        placeId: "ChIJd6e3soARLxgR8I4F2nK8z_d",
         propertyType: "studio" as const,
         bedrooms: 1,
         bathrooms: 1,
@@ -113,11 +100,13 @@ async function seedDatabase() {
       },
     ];
 
-    await Property.insertMany(sampleProperties);
+    for (const property of sampleProperties) {
+      await PropertyModel.create(property);
+    }
     console.log("Sample properties created");
 
     // Create sample user
-    const sampleUser = new User({
+    const sampleUser = await UserModel.create({
       name: "John Doe",
       email: "john@example.com",
       phone: "+254712345678",
@@ -125,7 +114,6 @@ async function seedDatabase() {
       savedProperties: [],
       isVerified: true,
     });
-    await sampleUser.save();
     console.log("Sample user created");
 
     console.log("Database seeded successfully!");

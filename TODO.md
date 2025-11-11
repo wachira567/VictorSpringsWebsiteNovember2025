@@ -1,40 +1,17 @@
-# Admin Property Management Implementation Plan
+# Property Detail Page Fixes
 
-## Phase 1: Enhance Admin Properties Page ✅
+## Current Issues
 
-- [x] Add image upload functionality with drag-and-drop UI
-- [x] Integrate Cloudinary upload API in property creation form
-- [x] Add Google Maps Places API for location pin selection
-- [x] Implement location autocomplete and pin placement
-- [x] Improve form validation and error handling
-- [x] Add image preview and management (delete, reorder)
+- Images are behind white layout (hero gallery positioned above content)
+- Duplicate footer (page footer + global footer)
+- Inconsistent navbar styling (plain vs styled)
+- Missing admin navbar links in NavbarNew
 
-## Phase 2: Creative Admin Styling ✅
+## Tasks
 
-- [x] Style Admin Dashboard with gradients, animations, and modern design
-- [x] Style Admin Properties page with creative layouts and hover effects
-- [x] Style Admin Inquiries page with interactive elements
-- [x] Ensure all admin pages are mobile-responsive
-- [x] Add micro-animations and transitions
-
-## Phase 3: Navbar Enhancement ✅
-
-- [x] Add gradient background and glassmorphism effect
-- [x] Implement smooth animations and transitions
-- [x] Improve mobile menu design with better UX
-- [x] Add active state indicators
-
-## Phase 4: User-Side Verification
-
-- [ ] Test property creation with images and Google pins
-- [ ] Verify MongoDB storage and retrieval
-- [ ] Ensure user-side property pages render correctly
-- [ ] Test Google Maps display on property detail pages
-- [ ] Validate mobile responsiveness across all pages
-
-## Dependencies ✅
-
-- [x] Google Maps JavaScript API key (add to env)
-- [x] @googlemaps/js-api-loader package (installed)
-- [x] Cloudinary configuration (already present)
-- [x] MongoDB connection (already configured)
+- [x] Remove custom navbar and footer from property detail page
+- [x] Move hero gallery inside white content section
+- [x] Apply property detail navbar styling to NavbarNew component
+- [x] Add admin links to NavbarNew when user is admin
+- [x] Update property-detail.css for new layout
+- [x] Test the changes on localhost:3000/properties/4
